@@ -105,19 +105,57 @@
             document.getElementById("document-form").reset();
         });
 
-        function removerDocumento(button) {
-            const row = button.parentElement.parentElement;
-            row.remove();
-        }
+        <script>
+    const senhaCorreta = "Soeuseiasenh@"; // Defina a senha desejada
 
-        function pesquisarMawb() {
-            const searchValue = document.getElementById("searchMawb").value.trim().toLowerCase();
-            const rows = document.querySelectorAll("#document-list tr");
-            rows.forEach(row => {
-                const mawb = row.cells[0].textContent.toLowerCase();
-                row.style.display = mawb.includes(searchValue) ? "" : "none";
-            });
+    document.getElementById("document-form").addEventListener("submit", function(event) {
+        event.preventDefault();
+        const mawb = document.getElementById("document-name").value;
+        const data = document.getElementById("dataRecebimento").value;
+        const hora = document.getElementById("horaRecebimento").value;
+        const peso = document.getElementById("pesoDocumento").value;
+        const origem = document.getElementById("origemDocumento").value;
+        const destino = document.getElementById("destinoDocumento").value;
+        const status = document.getElementById("statusDocumento").value;
+
+        const newRow = document.createElement("tr");
+        newRow.innerHTML = `
+            <td>${mawb}</td>
+            <td>${data}</td>
+            <td>${hora}</td>
+            <td>${peso} kg</td>
+            <td>${origem}</td>
+            <td>${destino}</td>
+            <td>${status}</td>
+            <td><input type="checkbox" /></td>
+            <td><button onclick="solicitarSenha(this)">Remover</button></td>
+        `;
+        document.getElementById("document-list").appendChild(newRow);
+        document.getElementById("document-form").reset();
+    });
+
+    function solicitarSenha(button) {
+        const senhaDigitada = prompt("Digite a senha para remover o documento:");
+        if (senhaDigitada === senhaCorreta) {
+            removerDocumento(button);
+        } else {
+            alert("Senha incorreta! Remoção cancelada.");
         }
-    </script>
+    }
+
+    function removerDocumento(button) {
+        const row = button.parentElement.parentElement;
+        row.remove();
+    }
+
+    function pesquisarMawb() {
+        const searchValue = document.getElementById("searchMawb").value.trim().toLowerCase();
+        const rows = document.querySelectorAll("#document-list tr");
+        rows.forEach(row => {
+            const mawb = row.cells[0].textContent.toLowerCase();
+            row.style.display = mawb.includes(searchValue) ? "" : "none";
+        });
+    }
+</script>
 </body>
 </html>

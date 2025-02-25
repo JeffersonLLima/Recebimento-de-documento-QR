@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Documentos</title>
-    <link rel="stylesheet" href="styles.css"> <!-- Referência a um arquivo CSS externo (se necessário) -->
+    <link rel="stylesheet" href="styles.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -37,51 +37,29 @@
 </head>
 <body>
 
-    <!-- Calculadora de Divergência Percentual -->
     <h2>Calculadora de Divergência Percentual</h2>
-    
     <label for="valorAntigo">MAWB:</label>
     <input type="number" id="valorAntigo" placeholder="Digite o MAWB"><br>
-
     <label for="valorNovo">DAE:</label>
     <input type="number" id="valorNovo" placeholder="Digite o DAE"><br>
-
     <button onclick="calcularDivergencia()">Calcular</button>
-
     <p id="resultado"></p>
 
-    <script>
-        function calcularDivergencia() {
-            let valorAntigo = parseFloat(document.getElementById("valorAntigo").value);
-            let valorNovo = parseFloat(document.getElementById("valorNovo").value);
-            
-            if (isNaN(valorAntigo) || isNaN(valorNovo) || valorAntigo === 0) {
-                document.getElementById("resultado").innerText = "Por favor, insira valores válidos!";
-                return;
-            }
-
-            let divergencia = ((valorNovo - valorAntigo) / valorAntigo) * 100;
-            let mensagem = divergencia > 0 
-                ? `Aumento de ${divergencia.toFixed(2)}%`
-                : `Redução de ${Math.abs(divergencia).toFixed(2)}%`;
-
-            document.getElementById("resultado").innerText = `Resultado: ${mensagem}`;
-        }
-    </script>
-
-    <!-- Lista de Recebimento de Documentos -->
     <h1>Lista de Recebimento de Documentos</h1>
-
     <form id="document-form">
         <input type="text" id="document-name" placeholder="Número AWB" required>
-        <input type="date" id="dataRecebimento" placeholder="Data" required>
-        <input type="time" id="horaRecebimento" placeholder="Hora" required>
+        <input type="date" id="dataRecebimento" required>
+        <input type="time" id="horaRecebimento" required>
         <input type="number" id="pesoDocumento" placeholder="Peso em KG" required>
         <input type="text" id="origemDocumento" placeholder="Origem" required>
         <input type="text" id="destinoDocumento" placeholder="Destino" required>
         <input type="text" id="statusDocumento" placeholder="Status Documento" required>
         <button type="submit">Adicionar Documento</button>
     </form>
+
+    <h3>Pesquisar MAWB</h3>
+    <input type="text" id="searchMawb" placeholder="Digite o MAWB">
+    <button onclick="pesquisarMawb()">Pesquisar</button>
 
     <table>
         <thead>
@@ -101,10 +79,8 @@
     </table>
 
     <script>
-        // Função para adicionar documentos na lista
         document.getElementById("document-form").addEventListener("submit", function(event) {
-            event.preventDefault(); // Impede o envio do formulário
-
+            event.preventDefault();
             const mawb = document.getElementById("document-name").value;
             const data = document.getElementById("dataRecebimento").value;
             const hora = document.getElementById("horaRecebimento").value;
@@ -113,9 +89,7 @@
             const destino = document.getElementById("destinoDocumento").value;
             const status = document.getElementById("statusDocumento").value;
 
-            // Criação de uma nova linha na tabela
             const newRow = document.createElement("tr");
-
             newRow.innerHTML = `
                 <td>${mawb}</td>
                 <td>${data}</td>
@@ -127,20 +101,23 @@
                 <td><input type="checkbox" /></td>
                 <td><button onclick="removerDocumento(this)">Remover</button></td>
             `;
-
-            // Adiciona a linha na tabela
             document.getElementById("document-list").appendChild(newRow);
-
-            // Limpa os campos após adicionar
             document.getElementById("document-form").reset();
         });
 
-        // Função para remover um documento
         function removerDocumento(button) {
             const row = button.parentElement.parentElement;
             row.remove();
         }
-    </script>
 
+        function pesquisarMawb() {
+            const searchValue = document.getElementById("searchMawb").value.trim().toLowerCase();
+            const rows = document.querySelectorAll("#document-list tr");
+            rows.forEach(row => {
+                const mawb = row.cells[0].textContent.toLowerCase();
+                row.style.display = mawb.includes(searchValue) ? "" : "none";
+            });
+        }
+    </script>
 </body>
 </html>

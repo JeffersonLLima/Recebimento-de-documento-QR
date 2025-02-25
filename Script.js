@@ -1,86 +1,131 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("document-form");
-    const documentList = document.getElementById("document-list");
+// Função para calcular a divergência percentual
+function calcularDivergencia() {
+    const valorAntigo = parseFloat(document.getElementById("valorAntigo").value);
+    const valorNovo = parseFloat(document.getElementById("valorNovo").value);
 
-    function loadDocuments() {
-        const savedDocuments = JSON.parse(localStorage.getItem("documents")) || [];
-        savedDocuments.forEach(doc => addRow(doc));
+    // Validação dos valores inseridos
+    if (isNaN(valorAntigo) || isNaN(valorNovo) || valorAntigo <= 0) {
+        document.getElementById("resultado").innerText = "Por favor, insira valores válidos!";
+        return;
     }
 
-    function addRow(doc) {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-            <td>${doc.awb}</td>
-            <td>${doc.dataRecebimento}</td>
-            <td>${doc.horaRecebimento}</td>
-            <td>${doc.peso} KG</td>
+    // Cálculo da divergência
+    const divergencia = ((valorNovo - valorAntigo) / valorAntigo) * 100;
+    const mensagem = divergencia > 0 
+        ? `Aumento de ${divergencia.toFixed(2)}%`
+        : `Redução de ${Math.abs(divergencia).toFixed(2)}%`;
+
+    const status = divergencia > 5 ? "Pendente" : "Apta para Embarque";
+
+    // Exibe o resultado
+    document.getElementById("resultado").innerText = `Resultado: ${mensagem}. Status: ${status}`;
+}
+
+// Função para carregar documentos do Local Storage
+function carregarDocumentos() {
+    const documentosSalvos = JSON.parse(localStorage.getItem("documentos")) || [];
+    const tabela = document.getElementById("document-list");
+    documentosSalvos.forEach(doc => {
+        const novaLinha = document.createElement("tr");
+        novaLinha.innerHTML = `
+            <td>${doc.mawb}</td>
+            <td>${doc.data}</td>
+            <td>${doc.hora}</td>
+            <td>${doc.peso} kg</td>
             <td>${doc.origem}</td>
             <td>${doc.destino}</td>
-            <td class="status">${doc.status}</td>
-            <td><button class="embarcado-btn">Embarcado</button></td>
-            <td><button class="remover-btn">Remover</button></td>
+            <td>${doc.status}</td>
+            <td><input type="checkbox" /></td>
+            <td><button onclick="removerDocumento(this)">Remover</button></td>
         `;
-        
-        const embarcadoBtn = row.querySelector(".embarcado-btn");
-        embarcadoBtn.addEventListener("click", function () {
-            doc.status = "Embarcado";
-            row.querySelector(".status").textContent = "Embarcado";
-            updateLocalStorage();
+        tabela.appendChild(novaLinha);
+    });
+}
+
+// Função para adicionar documentos
+document.getElementById("document-form").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const mawb = document.getElementById("document-name").value;
+    const data = document.getElementById("dataRecebimento").value;
+    const hora = document.getElementById("horaRecebimento").value;
+    const peso = document.getElementById("pesoDocumento").value;
+    const origem = document.getElementById("origemDocumento").value;
+    const destino = document.getElementById("destinoDocumento").value;
+    const status = document.getElementById("statusDocumento").value;
+
+    // Adiciona documento à tabela
+    const newRow = document.createElement("tr");
+    newRow.innerHTML = `
+        <td>${mawb}</td>
+        <td>${data}</td>
+        <td>${hora}</td>
+        <td>${peso} kg</td>
+        <td>${origem}</td>
+        <td>${destino}</td>
+        <td>${status}</td>
+        <td><input type="checkbox" /></td>
+        <td><button onclick="removerDocumento(this)">Remover</button></td>
+    `;
+    document.getElementById("document-list").appendChild(newRow);
+
+    // Salva no Local Storage
+    salvarDocumentos();
+
+    // Limpa os campos
+    document.getElementById("document-form").reset();
+});
+
+// Função para salvar documentos no Local Storage
+function salvarDocumentos() {
+    const documentos = [];
+    const rows = document.querySelectorAll("#document-list tr");
+
+    rows.forEach(row => {
+        const cols = row.querySelectorAll("td");
+        documentos.push({
+            mawb: cols[0].textContent,
+            data: cols[1].textContent,
+            hora: cols[2].textContent,
+            peso: cols[3].textContent.replace(" kg", ""),
+            origem: cols[4].textContent,
+            destino: cols[5].textContent,
+            status: cols[6].textContent
         });
-        
-        const removerBtn = row.querySelector(".remover-btn");
-        removerBtn.addEventListener("click", function () {
-            row.remove();
-            updateLocalStorage();
-        });
-        
-        documentList.appendChild(row);
-    }
-
-    function updateLocalStorage() {
-        const updatedDocuments = [];
-        documentList.querySelectorAll("tr").forEach(row => {
-            const cells = row.querySelectorAll("td");
-            if (cells.length > 0) {
-                updatedDocuments.push({
-                    awb: cells[0].textContent,
-                    dataRecebimento: cells[1].textContent,
-                    horaRecebimento: cells[2].textContent,
-                    peso: cells[3].textContent.replace(" KG", ""),
-                    origem: cells[4].textContent,
-                    destino: cells[5].textContent,
-                    status: cells[6].textContent
-                });
-            }
-        });
-        localStorage.setItem("documents", JSON.stringify(updatedDocuments));
-    }
-
-    form.addEventListener("submit", function (event) {
-        event.preventDefault();
-
-        const awb = document.getElementById("document-name").value;
-        const dataRecebimento = document.getElementById("data Recebimento").value;
-        const horaRecebimento = document.getElementById("Hora Recebimento").value;
-        const peso = document.getElementById("Peso Documento").value;
-        const origem = document.getElementById("Origem Documento").value;
-        const destino = document.getElementById("Destino Documento").value;
-        const status = document.getElementById("Status").value;
-
-        if (!awb || !dataRecebimento || !horaRecebimento || !peso || !origem || !destino || !status) {
-            alert("Preencha todos os campos!");
-            return;
-        }
-
-        const documentData = { awb, dataRecebimento, horaRecebimento, peso, origem, destino, status };
-        addRow(documentData);
-
-        let savedDocuments = JSON.parse(localStorage.getItem("documents")) || [];
-        savedDocuments.push(documentData);
-        localStorage.setItem("documents", JSON.stringify(savedDocuments));
-
-        form.reset();
     });
 
-    loadDocuments();
-});
+    localStorage.setItem("documentos", JSON.stringify(documentos));
+}
+
+// Função para remover um documento com senha
+function removerDocumento(button) {
+    const senhaCorreta = "Soeuseiasenh@";
+    const senha = prompt("Digite a senha para remover o documento:");
+
+    if (senha === senhaCorreta) {
+        button.closest("tr").remove();
+        salvarDocumentos();
+    } else {
+        alert("Senha incorreta. O documento não foi removido.");
+    }
+}
+
+// Função para filtrar documentos
+function filtrarDocumento() {
+    const searchTerm = document.getElementById("search").value.toLowerCase();
+    const rows = document.querySelectorAll("#document-list tr");
+
+    rows.forEach(row => {
+        const cells = row.querySelectorAll("td");
+        let match = false;
+        cells.forEach(cell => {
+            if (cell.textContent.toLowerCase().includes(searchTerm)) {
+                match = true;
+            }
+        });
+        row.style.display = match ? "" : "none";
+    });
+}
+
+// Carregar documentos ao iniciar a página
+document.addEventListener("DOMContentLoaded", carregarDocumentos);

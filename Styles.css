@@ -1,45 +1,63 @@
+/* Estilos globais */
 body {
     font-family: Arial, sans-serif;
     text-align: center;
-    margin: 20px;
-    background-image: url("C:\Users\Jefferson\Downloads\Logos\TG-07.png"); /* Imagem de fundo */
-    background-size: cover;
-    background-position: center;
+    margin: 50px;
+    background-color: #f8f8f8;
 }
 
-form {
-    margin-bottom: 20px;
-}
-
+/* Estilo de inputs e botões */
 input {
     padding: 8px;
     margin: 5px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
     width: 200px;
 }
 
 button {
-    padding: 8px;
-    background-color: blue;
+    padding: 10px 20px;
+    cursor: pointer;
+    background-color: #007bff;
     color: white;
     border: none;
-    cursor: pointer;
+    border-radius: 4px;
 }
 
+button:hover {
+    background-color: #0056b3;
+}
+
+#resultado {
+    font-weight: bold;
+    margin-top: 10px;
+    color: #28a745;
+}
+
+/* Estilo da tabela */
 table {
-    width: 80%;
-    margin: auto;
+    width: 100%;
     border-collapse: collapse;
+    margin-top: 20px;
 }
 
 th, td {
-    border: 1px solid black;
-    padding: 10px;
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
 }
 
-.delete-btn {
-    background-color: red;
+th {
+    background-color: #007bff;
     color: white;
-    border: none;
-    padding: 5px;
-    cursor: pointer;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    input {
+        width: 90%;
+    }
+    table, th, td {
+        font-size: 14px;
+    }
 }

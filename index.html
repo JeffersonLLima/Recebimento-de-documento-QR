@@ -35,9 +35,6 @@
         }
     </style>
 </head>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
-</head>
 <body>
 
 <h2>Calculadora de Divergência Percentual</h2>
@@ -52,108 +49,100 @@
 
 <p id="resultado"></p>
 
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+
 <script>
-    function calcularDivergencia() {
-        let valorAntigo = parseFloat(document.getElementById("valorAntigo").value);
-        let valorNovo = parseFloat(document.getElementById("valorNovo").value);
-        
-        if (isNaN(valorAntigo) || isNaN(valorNovo) || valorAntigo <= 0) {
-            document.getElementById("resultado").innerText = "Por favor, insira valores válidos!";
-            return;
-        }
+// Configuração do Firebase
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
 
-        let divergencia = ((valorNovo - valorAntigo) / valorAntigo) * 100;
-        let mensagem = divergencia > 0 
-            ? `Aumento de ${divergencia.toFixed(2)}%`
-            : `Redução de ${Math.abs(divergencia).toFixed(2)}%`;
+// Inicializa o Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-        // Verificação do status baseado na divergência
-        let status = divergencia > 5 ? "Pendente" : "Apta para Embarque";
-
-        // Exibe o resultado
-        document.getElementById("resultado").innerText = `Resultado: ${mensagem}. Status: ${status}`;
+function calcularDivergencia() {
+    let valorAntigo = parseFloat(document.getElementById("valorAntigo").value);
+    let valorNovo = parseFloat(document.getElementById("valorNovo").value);
+    
+    if (isNaN(valorAntigo) || isNaN(valorNovo) || valorAntigo <= 0) {
+        document.getElementById("resultado").innerText = "Por favor, insira valores válidos!";
+        return;
     }
-</script>
 
-<h1>Lista de Recebimento de Documentos</h1>
+    let divergencia = ((valorNovo - valorAntigo) / valorAntigo) * 100;
+    let mensagem = divergencia > 0 
+        ? `Aumento de ${divergencia.toFixed(2)}%`
+        : `Redução de ${Math.abs(divergencia).toFixed(2)}%`;
 
-<label for="search">Pesquisar por MAWB:</label>
-<input type="text" id="search" onkeyup="filtrarDocumento()" placeholder="Digite o número do AWB">
+    // Verificação do status baseado na divergência
+    let status = divergencia > 5 ? "Pendente" : "Apta para Embarque";
 
-<form id="document-form">
-    <input type="text" id="document-name" placeholder="Número AWB" required>
-    <input type="date" id="dataRecebimento" placeholder="Data" required>
-    <input type="time" id="horaRecebimento" placeholder="Hora" required>
-    <input type="number" id="pesoDocumento" placeholder="Peso em KG" required step="0.01">
-    <input type="text" id="origemDocumento" placeholder="Origem" required>
-    <input type="text" id="destinoDocumento" placeholder="Destino" required>
-    <input type="text" id="shcDocumento" placeholder="SHC" required>
-    <input type="text" id="statusDocumento" placeholder="Status Documento" required>
-    <button type="submit">Adicionar Documento</button>
-</form>
+    // Exibe o resultado
+    document.getElementById("resultado").innerText = `Resultado: ${mensagem}. Status: ${status}`;
+}
 
-<table>
-    <thead>
-        <tr>
-            <th>MAWB</th>
-            <th>Data</th>
-            <th>Hora</th>
-            <th>Peso</th>
-            <th>Origem</th>
-            <th>Destino</th>
-            <th>SHC</th>
-            <th>Status</th>
-            <th>Embarcado</th>
-            <th>Remover</th>
-        </tr>
-    </thead>
-    <tbody id="document-list"></tbody>
-</table>
-
-<script>
-    // Função para carregar os documentos do Local Storage
-    function carregarDocumentos() {
-        const documentosSalvos = JSON.parse(localStorage.getItem("documentos")) || [];
-        const tabela = document.getElementById("document-list");
-        documentosSalvos.forEach(doc => {
+// Função para carregar os documentos do Firestore
+function carregarDocumentos() {
+    const tabela = document.getElementById("document-list");
+    db.collection("documentos").get().then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+            const docData = doc.data();
             const novaLinha = document.createElement("tr");
             novaLinha.innerHTML = `
-                <td>${doc.mawb}</td>
-                <td>${doc.data}</td>
-                <td>${doc.hora}</td>
-                <td>${doc.peso} kg</td>
-                <td>${doc.origem}</td>
-                <td>${doc.destino}</td>
-                <td>${doc.shc}</td>
-                <td>${doc.status}</td>
+                <td>${docData.mawb}</td>
+                <td>${docData.data}</td>
+                <td>${docData.hora}</td>
+                <td>${docData.peso} kg</td>
+                <td>${docData.origem}</td>
+                <td>${docData.destino}</td>
+                <td>${docData.shc}</td>
+                <td>${docData.status}</td>
                 <td>
                     <input type="checkbox" 
-                           onchange="alterarStatusEmbarcado(this, '${doc.mawb}')" 
-                           ${doc.status === 'Embarcado' ? 'checked' : ''} 
-                           ${doc.status === 'Embarcado' ? 'disabled' : ''} />
+                        onchange="alterarStatusEmbarcado(this, '${docData.mawb}')" 
+                        ${docData.status === 'Embarcado' ? 'checked' : ''} 
+                        ${docData.status === 'Embarcado' ? 'disabled' : ''} />
                 </td>
-                <td><button onclick="removerDocumento(this)">Remover</button></td>
+                <td><button onclick="removerDocumento(this, '${doc.id}')">Remover</button></td>
             `;
             tabela.appendChild(novaLinha);
         });
-    }
+    });
+}
 
-    // Função para adicionar documentos na lista
-    document.getElementById("document-form").addEventListener("submit", function(event) {
-        event.preventDefault(); // Impede o envio do formulário
+// Função para adicionar documentos na Firestore
+document.getElementById("document-form").addEventListener("submit", function(event) {
+    event.preventDefault(); // Impede o envio do formulário
 
-        const mawb = document.getElementById("document-name").value;
-        const data = document.getElementById("dataRecebimento").value;
-        const hora = document.getElementById("horaRecebimento").value;
-        const peso = document.getElementById("pesoDocumento").value;
-        const origem = document.getElementById("origemDocumento").value;
-        const destino = document.getElementById("destinoDocumento").value;
-        const shc = document.getElementById("shcDocumento").value;
-        const status = document.getElementById("statusDocumento").value;
+    const mawb = document.getElementById("document-name").value;
+    const data = document.getElementById("dataRecebimento").value;
+    const hora = document.getElementById("horaRecebimento").value;
+    const peso = document.getElementById("pesoDocumento").value;
+    const origem = document.getElementById("origemDocumento").value;
+    const destino = document.getElementById("destinoDocumento").value;
+    const shc = document.getElementById("shcDocumento").value;
+    const status = document.getElementById("statusDocumento").value;
 
-        // Criação de uma nova linha na tabela
+    // Salvar o documento no Firestore
+    db.collection("documentos").add({
+        mawb: mawb,
+        data: data,
+        hora: hora,
+        peso: peso,
+        origem: origem,
+        destino: destino,
+        shc: shc,
+        status: status
+    }).then(() => {
+        // Adiciona a linha na tabela
         const newRow = document.createElement("tr");
-
         newRow.innerHTML = `
             <td>${mawb}</td>
             <td>${data}</td>
@@ -166,100 +155,72 @@
             <td><input type="checkbox" onchange="alterarStatusEmbarcado(this, '${mawb}')"/></td>
             <td><button onclick="removerDocumento(this)">Remover</button></td>
         `;
-
-        // Adiciona a linha na tabela
         document.getElementById("document-list").appendChild(newRow);
-
-        // Salvar os documentos no Local Storage
-        salvarDocumentos();
 
         // Limpa os campos após adicionar
         document.getElementById("document-form").reset();
     });
+});
 
-    // Função para salvar os documentos no Local Storage
-    function salvarDocumentos() {
-        const linhas = document.querySelectorAll("#document-list tr");
-        const documentos = [];
+// Função para remover um documento do Firestore
+function removerDocumento(button, docId) {
+    const senhaCorreta = "Soeuseiasenh@"; // Defina a senha necessária para remoção
+    const senha = prompt("Digite a senha para remover o documento:");
 
-        linhas.forEach(linha => {
-            const cols = linha.querySelectorAll("td");
-            documentos.push({
-                mawb: cols[0].textContent,
-                data: cols[1].textContent,
-                hora: cols[2].textContent,
-                peso: cols[3].textContent.replace(" kg", ""),
-                origem: cols[4].textContent,
-                destino: cols[5].textContent,
-                shc: cols[6].textContent,
-                status: cols[7].textContent
-            });
-        });
-
-        localStorage.setItem("documentos", JSON.stringify(documentos));
-    }
-
-    // Função para remover um documento com verificação de senha
-    function removerDocumento(button) {
-        const senhaCorreta = "Soeuseiasenh@"; // Defina a senha necessária para remoção
-        const senha = prompt("Digite a senha para remover o documento:");
-
-        if (senha === senhaCorreta) {
+    if (senha === senhaCorreta) {
+        db.collection("documentos").doc(docId).delete().then(() => {
             const row = button.parentElement.parentElement;
             row.remove();
+        }).catch((error) => {
+            alert("Erro ao remover o documento: " + error.message);
+        });
+    } else {
+        alert("Senha incorreta. O documento não foi removido.");
+    }
+}
 
-            // Atualiza o Local Storage após remoção
-            salvarDocumentos();
-        } else {
-            alert("Senha incorreta. O documento não foi removido.");
+// Função de filtro para MAWB
+function filtrarDocumento() {
+    const searchTerm = document.getElementById("search").value.toLowerCase();
+    const rows = document.querySelectorAll("#document-list tr");
+    
+    rows.forEach(row => {
+        const mawbCell = row.querySelector("td");
+        if (mawbCell) {
+            const mawbValue = mawbCell.textContent.toLowerCase();
+            row.style.display = mawbValue.includes(searchTerm) ? "" : "none";
         }
-    }
+    });
+}
 
-    // Função de filtro para MAWB
-    function filtrarDocumento() {
-        const searchTerm = document.getElementById("search").value.toLowerCase();
-        const rows = document.querySelectorAll("#document-list tr");
-        
-        rows.forEach(row => {
-            const mawbCell = row.querySelector("td");
-            if (mawbCell) {
-                const mawbValue = mawbCell.textContent.toLowerCase();
-                row.style.display = mawbValue.includes(searchTerm) ? "" : "none";
+// Função para alterar o status para "Embarcado"
+function alterarStatusEmbarcado(checkbox, mawb) {
+    const rows = document.querySelectorAll("#document-list tr");
+    rows.forEach(row => {
+        const mawbCell = row.querySelector("td");
+        if (mawbCell && mawbCell.textContent === mawb) {
+            const statusCell = row.querySelector("td:nth-child(8)");
+            if (checkbox.checked) {
+                statusCell.textContent = 'Embarcado';
+                checkbox.disabled = true; // Desabilita o checkbox se marcado
+            } else {
+                statusCell.textContent = 'Apta para Embarque'; // Ou outro status inicial
             }
+        }
+    });
+
+    // Atualiza o status no Firestore
+    db.collection("documentos").where("mawb", "==", mawb).get().then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+            db.collection("documentos").doc(doc.id).update({
+                status: checkbox.checked ? 'Embarcado' : 'Apta para Embarque'
+            });
         });
-    }
+    });
+}
 
-    // Função para alterar o status para "Embarcado" quando a checkbox for marcada
-    function alterarStatusEmbarcado(checkbox, mawb) {
-        const rows = document.querySelectorAll("#document-list tr");
-        rows.forEach(row => {
-            const mawbCell = row.querySelector("td");
-            if (mawbCell && mawbCell.textContent === mawb) {
-                const statusCell = row.querySelector("td:nth-child(8)"); // Corrigido índice da célula de status
-                if (checkbox.checked) {
-                    statusCell.textContent = 'Embarcado';
-                    checkbox.disabled = true; // Desabilita o checkbox se marcado
-                } else {
-                    statusCell.textContent = 'Apta para Embarque'; // Ou outro status inicial
-                }
-
-                // Atualiza o Local Storage após mudança de status
-                salvarDocumentos();
-            }
-        });
-    }
-
-    // Carregar os documentos ao iniciar a página
-    carregarDocumentos();
-</script>
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
+// Carregar os documentos ao iniciar a página
+carregarDocumentos();
 </script>
 
 </body>

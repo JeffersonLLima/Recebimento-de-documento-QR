@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
@@ -84,6 +84,7 @@
     <input type="number" id="pesoDocumento" placeholder="Peso em KG" required step="0.01">
     <input type="text" id="origemDocumento" placeholder="Origem" required>
     <input type="text" id="destinoDocumento" placeholder="Destino" required>
+    <input type="text" id="shcDocumento" placeholder="SHC" required>
     <input type="text" id="statusDocumento" placeholder="Status Documento" required>
     <button type="submit">Adicionar Documento</button>
 </form>
@@ -97,6 +98,7 @@
             <th>Peso</th>
             <th>Origem</th>
             <th>Destino</th>
+            <th>SHC</th>
             <th>Status</th>
             <th>Embarcado</th>
             <th>Remover</th>
@@ -109,7 +111,6 @@
     // Função para carregar os documentos do Local Storage
     function carregarDocumentos() {
         const documentosSalvos = JSON.parse(localStorage.getItem("documentos")) || [];
-        console.log("Documentos carregados do Local Storage:", documentosSalvos); // Verifica se os documentos foram carregados
         const tabela = document.getElementById("document-list");
         documentosSalvos.forEach(doc => {
             const novaLinha = document.createElement("tr");
@@ -120,8 +121,14 @@
                 <td>${doc.peso} kg</td>
                 <td>${doc.origem}</td>
                 <td>${doc.destino}</td>
+                <td>${doc.shc}</td>
                 <td>${doc.status}</td>
-                <td><input type="checkbox" /></td>
+                <td>
+                    <input type="checkbox" 
+                           onchange="alterarStatusEmbarcado(this, '${doc.mawb}')" 
+                           ${doc.status === 'Embarcado' ? 'checked' : ''} 
+                           ${doc.status === 'Embarcado' ? 'disabled' : ''} />
+                </td>
                 <td><button onclick="removerDocumento(this)">Remover</button></td>
             `;
             tabela.appendChild(novaLinha);
@@ -138,6 +145,7 @@
         const peso = document.getElementById("pesoDocumento").value;
         const origem = document.getElementById("origemDocumento").value;
         const destino = document.getElementById("destinoDocumento").value;
+        const shc = document.getElementById("shcDocumento").value;
         const status = document.getElementById("statusDocumento").value;
 
         // Criação de uma nova linha na tabela
@@ -150,8 +158,9 @@
             <td>${peso} kg</td>
             <td>${origem}</td>
             <td>${destino}</td>
+            <td>${shc}</td>
             <td>${status}</td>
-            <td><input type="checkbox" /></td>
+            <td><input type="checkbox" onchange="alterarStatusEmbarcado(this, '${mawb}')"/></td>
             <td><button onclick="removerDocumento(this)">Remover</button></td>
         `;
 
@@ -179,16 +188,12 @@
                 peso: cols[3].textContent.replace(" kg", ""),
                 origem: cols[4].textContent,
                 destino: cols[5].textContent,
-                status: cols[6].textContent
+                shc: cols[6].textContent,
+                status: cols[7].textContent
             });
         });
 
-        console.log("Documentos a salvar:", documentos); // Verifica os documentos antes de salvar
         localStorage.setItem("documentos", JSON.stringify(documentos));
-
-        // Verifica se os documentos foram salvos corretamente no Local Storage
-        const documentosSalvos = JSON.parse(localStorage.getItem("documentos"));
-        console.log("Documentos salvos no Local Storage:", documentosSalvos);
     }
 
     // Função para remover um documento com verificação de senha
@@ -221,9 +226,30 @@
         });
     }
 
+    // Função para alterar o status para "Embarcado" quando a checkbox for marcada
+    function alterarStatusEmbarcado(checkbox, mawb) {
+        const rows = document.querySelectorAll("#document-list tr");
+        rows.forEach(row => {
+            const mawbCell = row.querySelector("td");
+            if (mawbCell && mawbCell.textContent === mawb) {
+                const statusCell = row.querySelector("td:nth-child(8)"); // Corrigido índice da célula de status
+                if (checkbox.checked) {
+                    statusCell.textContent = 'Embarcado';
+                    checkbox.disabled = true; // Desabilita o checkbox se marcado
+                } else {
+                    statusCell.textContent = 'Apta para Embarque'; // Ou outro status inicial
+                }
+
+                // Atualiza o Local Storage após mudança de status
+                salvarDocumentos();
+            }
+        });
+    }
+
     // Carregar os documentos ao iniciar a página
     carregarDocumentos();
 </script>
+
 
 </body>
 </html>
